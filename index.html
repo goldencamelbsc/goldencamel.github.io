@@ -1,11 +1,34 @@
-<section class="hero">
-  <div class="logo">🐪 THE GOLDEN CAMEL — GCAM Token</div>
-  <button id="connectButton" class="btn">Connect Wallet</button>
-  
-  <!-- زر تحقق من متابعة حساب X -->
-  <input type="text" id="twitterHandle" placeholder="Enter your X username">
-  <button id="verifyFollow" class="btn">Verify Follow @GoldenCamelBSC</button>
-  
-  <button id="claimButton" class="btn" disabled>Claim Airdrop</button>
-  <div id="status">🔗 Please connect your wallet</div>
-</section>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>The Golden Camel | GCAM Token</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/ethers/dist/ethers.min.js"></script>
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+  <!-- قسم التوزيع المجاني (Airdrop) -->
+  <section class="hero">
+    <div class="logo">🐪 THE GOLDEN CAMEL — GCAM Token</div>
+    <button id="connectButton" class="btn">Connect Wallet</button>
+    
+    <!-- تحقق من متابعة حساب X -->
+    <input type="text" id="twitterHandle" placeholder="Enter your X username">
+    <button id="verifyFollow" class="btn">Verify Follow @GoldenCamelBSC</button>
+    
+    <button id="claimButton" class="btn" disabled>Claim Airdrop</button>
+    <div id="status">🔗 Please connect your wallet</div>
+  </section>
+
+  <!-- قسم البيع المسبق (Presale) -->
+  <section class="presale">
+    <h2>🔥 Presale is Live!</h2>
+    <label for="tokenAmount">GCAM Tokens:</label>
+    <input type="number" id="tokenAmount" min="100" step="100">
+    <button id="buyButton" class="btn" disabled>Buy GCAM</button>
+    <div id="presaleStatus">💰 Price will be shown in USDT</div>
+  </section>
+</body>
+</html>
