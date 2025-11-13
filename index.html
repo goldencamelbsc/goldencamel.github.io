@@ -4,19 +4,27 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>The Golden Camel | GCAM Token</title>
-  <!-- ربط ملف التنسيقات -->
   <link rel="stylesheet" href="css/style.css">
-  <!-- مكتبة ethers للتعامل مع العقود الذكية -->
   <script src="https://cdn.jsdelivr.net/npm/ethers/dist/ethers.min.js"></script>
-  <!-- ملف الجافاسكربت الخاص بالمشروع -->
   <script src="js/app.js" defer></script>
 </head>
 <body>
+  <!-- قسم التوزيع المجاني (Airdrop) -->
   <section class="hero">
     <div class="logo">🐪 THE GOLDEN CAMEL — GCAM Token</div>
     <button id="connectButton" class="btn">Connect Wallet</button>
     <button id="claimButton" class="btn" disabled>Claim Airdrop</button>
     <div id="status">🔗 Please connect your wallet</div>
+  </section>
+
+  <!-- قسم البيع المسبق (Presale) -->
+  <section class="presale">
+    <h2>🔥 Presale is Live!</h2>
+    <p>Buy GCAM tokens at discounted price before launch.</p>
+    <label for="amount">Amount (BNB):</label>
+    <input type="number" id="amount" min="0.01" step="0.01">
+    <button id="buyButton" class="btn" disabled>Buy GCAM</button>
+    <div id="presaleStatus">💰 Connect wallet to participate</div>
   </section>
 </body>
 </html>
