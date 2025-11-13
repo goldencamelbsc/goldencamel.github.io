@@ -1,235 +1,131 @@
-document.addEventListener("DOMContentLoaded", () => {
-  // عنوان عقد GCAM على BSC Testnet
-  const contractAddress = "0xe5037f8A3B689c986f11d7c84B83be6E8a9199ff";
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>GCAM Token Presale</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
 
-  // ABI مبسط للتعامل مع وظائف العقد
-  const contractABI = [
-    "function claimAirdrop() public",
-    "function hasClaimed(address) public view returns (bool)",
-    "function buyTokens(uint256 amount) public"
-  ];
+  <!-- CSS -->
+  <!-- إذا كان ملف style.css داخل مجلد css استخدم المسار أدناه -->
+  <link rel="stylesheet" href="css/style.css?v=1">
 
-  // عنوان عقد USDT (ضع عنواناً صالحاً على BSC Testnet أو اتركه غير مفعل)
-  const usdtAddress = "0x...";
-  const usdtABI = [
-    "function approve(address spender, uint256 amount) public returns (bool)",
-    "function allowance(address owner, address spender) public view returns (uint256)",
-    "function balanceOf(address owner) public view returns (uint256)"
-  ];
-
-  let provider, signer, contract, usdt;
-
-  // عناصر الواجهة
-  const connectButton = document.getElementById("connectButton");
-  const switchNetworkButton = document.getElementById("switchNetwork");
-  const disconnectButton = document.getElementById("disconnectButton");
-  const claimButton = document.getElementById("claimButton");
-  const status = document.getElementById("status");
-  const verifyButton = document.getElementById("verifyFollow");
-  const twitterHandle = document.getElementById("twitterHandle");
-  const buyButton = document.getElementById("buyButton");
-  const tokenAmountInput = document.getElementById("tokenAmount");
-  const presaleStatus = document.getElementById("presaleStatus");
-
-  // تحقق سريع من وجود العناصر
-  if (!connectButton || !switchNetworkButton || !disconnectButton || !status) {
-    console.error("Buttons/DOM not found. Check IDs in index.html");
-    return;
-  }
-
-  // إعداد Web3Modal
-  const providerOptions = {
-    walletconnect: {
-      package: window.WalletConnectProvider?.default || window.WalletConnectProvider,
-      options: {
-        rpc: {
-          97: "https://data-seed-prebsc-1-s1.binance.org:8545/",
-          56: "https://bsc-dataseed.binance.org/"
-        }
-      }
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      text-align: center;
+      padding: 40px;
+      margin: 0;
     }
-  };
 
-  const web3Modal = new window.Web3Modal.default({
-    cacheProvider: false,
-    providerOptions,
-    theme: "dark"
-  });
-
-  // اتصال بالمحفظة
-  connectButton.onclick = async () => {
-    try {
-      status.innerText = "⏳ جاري فتح نافذة المحفظة...";
-      const instance = await web3Modal.connect();
-      provider = new ethers.providers.Web3Provider(instance);
-      signer = provider.getSigner();
-
-      // التحويل إلى BSC Testnet إن لزم
-      const net = await provider.getNetwork();
-      if (net.chainId !== 97 && window.ethereum) {
-        status.innerText = "🌐 محاولة التبديل إلى BSC Testnet...";
-        await switchToBscTestnet();
-      }
-
-      // تأكيد الشبكة بعد التبديل
-      const network = await provider.getNetwork();
-      if (network.chainId !== 97) {
-        status.innerText = `⚠️ شبكة خاطئة: ${network.name}. الرجاء اختيار BSC Testnet (97).`;
-        return;
-      }
-
-      // تهيئة العقد
-      contract = new ethers.Contract(contractAddress, contractABI, signer);
-
-      // تهيئة USDT فقط إذا العنوان صالح
-      if (/^0x[a-fA-F0-9]{40}$/.test(usdtAddress)) {
-        usdt = new ethers.Contract(usdtAddress, usdtABI, signer);
-      } else {
-        usdt = null;
-        console.warn("USDT address not set. Buying will be disabled until set.");
-      }
-
-      const userAddress = await signer.getAddress();
-      status.innerText = `✅ تم الاتصال: ${userAddress}`;
-      claimButton.disabled = false;
-      buyButton.disabled = !usdt; // فعل الشراء فقط إذا USDT مهيأ
-    } catch (err) {
-      console.error("Connection error:", err);
-      status.innerText = "❌ فشل اتصال المحفظة.";
+    h1 {
+      margin-bottom: 30px;
     }
-  };
 
-  // التبديل إلى شبكة BSC Testnet (مع إضافة الشبكة إذا غير موجودة)
-  async function switchToBscTestnet() {
-    try {
-      await window.ethereum.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: "0x61" }]
-      });
-      status.innerText = "✅ تم التبديل إلى BSC Testnet.";
-    } catch (switchError) {
-      // إذا الشبكة غير مضافة إلى MetaMask
-      if (switchError.code === 4902) {
-        await window.ethereum.request({
-          method: "wallet_addEthereumChain",
-          params: [{
-            chainId: "0x61",
-            chainName: "BSC Testnet",
-            nativeCurrency: { name: "tBNB", symbol: "tBNB", decimals: 18 },
-            rpcUrls: ["https://data-seed-prebsc-1-s1.binance.org:8545/"],
-            blockExplorerUrls: ["https://testnet.bscscan.com"]
-          }]
-        });
-        status.innerText = "✅ تمت إضافة شبكة BSC Testnet والتبديل لها.";
-      } else {
-        throw switchError;
-      }
+    .btn {
+      background: #d4af37;
+      color: #000;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 10px;
+      border: none;
+      min-width: 160px;
     }
-  }
 
-  switchNetworkButton.onclick = async () => {
-    if (!window.ethereum) {
-      status.innerText = "⚠️ لا توجد محفظة مثبتة. الرجاء تثبيت MetaMask.";
-      return;
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
-    try {
-      await switchToBscTestnet();
-    } catch (err) {
-      console.error("Switch network error:", err);
-      status.innerText = "❌ فشل تبديل الشبكة. الرجاء التبديل يدوياً من المحفظة.";
-    }
-  };
 
-  // قطع الاتصال
-  disconnectButton.onclick = async () => {
-    try {
-      await web3Modal.clearCachedProvider();
-      provider = null;
-      signer = null;
-      contract = null;
-      usdt = null;
-      status.innerText = "🔌 تم فصل المحفظة.";
-      claimButton.disabled = true;
-      buyButton.disabled = true;
-    } catch (err) {
-      console.error("Disconnect error:", err);
-      status.innerText = "❌ فشل فصل المحفظة.";
+    input {
+      padding: 10px;
+      border-radius: 6px;
+      margin: 10px;
+      border: none;
+      min-width: 260px;
+      text-align: center;
     }
-  };
 
-  // التحقق من متابعة حساب X (واجهة فقط)
-  verifyButton.onclick = () => {
-    if (twitterHandle.value.trim() === "") {
-      status.innerText = "⚠️ الرجاء إدخال اسم مستخدم X.";
-      return;
+    #status, #presaleStatus {
+      margin-top: 20px;
+      white-space: pre-line;
+      min-height: 24px;
     }
-    status.innerText = `✅ تم التحقق من متابعة @${twitterHandle.value}`;
-    claimButton.disabled = false;
-  };
 
-  // المطالبة بالإسقاط الجوي
-  claimButton.onclick = async () => {
-    if (!contract || !signer) {
-      status.innerText = "❌ الرجاء توصيل المحفظة أولاً.";
-      return;
+    .section {
+      margin-top: 30px;
     }
-    try {
-      const address = await signer.getAddress();
-      const alreadyClaimed = await contract.hasClaimed(address);
-      if (alreadyClaimed) {
-        status.innerText = "⚠️ لقد طالبت بالإسقاط مسبقاً.";
-        return;
-      }
-      status.innerText = "⏳ جاري إرسال معاملة المطالبة... أكد في المحفظة.";
-      const tx = await contract.claimAirdrop();
-      await tx.wait();
-      status.innerText = "🎁 نجاح! تم استلام رموز GCAM.";
-    } catch (err) {
-      console.error(err);
-      status.innerText = "❌ فشلت المعاملة.";
-    }
-  };
+  </style>
+</head>
+<body>
+  <h1>🐪 الجمل الذهبي — GCAM Token</h1>
 
-  // حساب السعر وعرضه
-  tokenAmountInput.oninput = () => {
-    const amount = parseInt(tokenAmountInput.value);
-    if (!amount || amount <= 0) {
-      presaleStatus.innerText = "⚠️ أدخل مقداراً صالحاً.";
-      return;
-    }
-    const pricePerToken = 0.01; // بالدولار USDT
-    const totalPrice = amount * pricePerToken;
-    presaleStatus.innerText = `💵 السعر الإجمالي: ${totalPrice.toFixed(2)} USDT`;
-  };
+  <!-- أزرار الاتصال بالمحفظة -->
+  <div class="section">
+    <button id="connectButton" class="btn">🔗 ربط المحفظة</button>
+    <button id="switchNetwork" class="btn">🌐 التبديل إلى شبكة اختبار BSC</button>
+    <button id="disconnectButton" class="btn">❌ افصل المحفظة</button>
+  </div>
 
-  // شراء عبر USDT (يتطلب عنوان USDT صالح)
-  buyButton.onclick = async () => {
-    if (!contract || !usdt) {
-      presaleStatus.innerText = "❌ الرجاء توصيل المحفظة أو ضبط عنوان USDT.";
-      return;
-    }
-    try {
-      const amount = parseInt(tokenAmountInput.value);
-      if (!amount || amount <= 0) {
-        presaleStatus.innerText = "⚠️ أدخل مقداراً صالحاً.";
-        return;
-      }
-      const pricePerToken = 0.01;
-      const totalPriceFloat = amount * pricePerToken;
-      const totalPrice = ethers.utils.parseUnits(totalPriceFloat.toString(), 18);
+  <!-- حالة الاتصال -->
+  <div id="status">🔗 يرجى توصيل محفظتك</div>
 
-      presaleStatus.innerText = "⏳ الموافقة على USDT...";
-      const approveTx = await usdt.approve(contractAddress, totalPrice);
-      await approveTx.wait();
+  <!-- التحقق من متابعة حساب X -->
+  <div class="section">
+    <input
+      type="text"
+      id="twitterHandle"
+      placeholder="أدخل اسم مستخدم X (تويتر) الخاص بك بدون @"
+      autocomplete="off"
+    >
+    <div>
+      <button id="verifyFollow" class="btn">
+        ✅ تحقق من متابعة @GoldenCamelBSC
+      </button>
+    </div>
+    <div>
+      <button id="claimButton" class="btn" disabled>
+        🎁 المطالبة بالإسقاط الجوي (Airdrop)
+      </button>
+    </div>
+  </div>
 
-      presaleStatus.innerText = "⏳ إرسال معاملة الشراء... أكد في المحفظة.";
-      const tx = await contract.buyTokens(amount);
-      await tx.wait();
+  <!-- شراء التوكنات -->
+  <div class="section">
+    <input
+      type="number"
+      id="tokenAmount"
+      placeholder="أدخل عدد رموز GCAM التي تريد شراءها"
+      min="0"
+      step="1"
+    >
+    <div>
+      <button id="buyButton" class="btn" disabled>
+        💵 شراء رموز GCAM
+      </button>
+    </div>
+    <div id="presaleStatus">💵 أدخل الكمية لمعرفة السعر التقريبي</div>
+  </div>
 
-      presaleStatus.innerText = "🎉 نجاح! تم شراء رموز GCAM.";
-    } catch (err) {
-      console.error(err);
-      presaleStatus.innerText = "❌ فشلت المعاملة.";
-    }
-  };
-});
+  <!-- السكربتات (يجب أن تكون في آخر الصفحة لضمان وجود عناصر الـ HTML قبل تشغيلها) -->
+
+  <!-- 1) مكتبة ethers (إصدار ثابت موثوق) -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+
+  <!-- 2) مكتبة Web3Modal (الإصدار 1.x الكلاسيكي المتوافق مع WalletConnect v1) -->
+  <script src="https://unpkg.com/web3modal@1.9.12/dist/index.js"></script>
+
+  <!-- 3) مزود WalletConnect (إصدار UMD متوافق مع Web3Modal v1) -->
+  <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+
+  <!-- 4) سكربت التطبيق الخاص بك -->
+  <!-- إذا كان app.js داخل مجلد js استخدم السطر التالي -->
+  <script src="js/app.js" defer></script>
+
+  <!-- إذا كان app.js بجانب index.html استخدم هذا السطر بدل السابق -->
+  <!-- <script src="app.js" defer></script> -->
+</body>
+</html>
