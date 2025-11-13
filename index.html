@@ -3,26 +3,32 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>The Golden Camel | GCAM Token</title>
+  <title>THE GOLDEN CAMEL — GCAM Token</title>
   <link rel="stylesheet" href="css/style.css">
+
+  <!-- مكتبات الاتصال بالمحفظة -->
   <script src="https://cdn.jsdelivr.net/npm/ethers/dist/ethers.min.js"></script>
-  <script src="js/app.js" defer></script>
+  <script src="https://unpkg.com/web3modal"></script>
+  <script src="https://unpkg.com/@walletconnect/web3-provider"></script>
 </head>
 <body>
-  <!-- قسم التوزيع المجاني (Airdrop) -->
   <section class="hero">
     <div class="logo">🐪 THE GOLDEN CAMEL — GCAM Token</div>
-    <button id="connectButton" class="btn">Connect Wallet</button>
-    
-    <!-- تحقق من متابعة حساب X -->
+
+    <!-- زر الاتصال بالمحفظة -->
+    <button id="connectWallet" class="btn">🔗 Connect Wallet</button>
+    <button id="switchNetwork" class="btn">🌐 Switch to BSC Testnet</button>
+    <div id="walletStatus">Not connected</div>
+
+    <!-- التحقق من متابعة حساب X -->
     <input type="text" id="twitterHandle" placeholder="Enter your X username">
     <button id="verifyFollow" class="btn">Verify Follow @GoldenCamelBSC</button>
-    
+
+    <!-- زر المطالبة بالتوزيع المجاني -->
     <button id="claimButton" class="btn" disabled>Claim Airdrop</button>
     <div id="status">🔗 Please connect your wallet</div>
   </section>
 
-  <!-- قسم البيع المسبق (Presale) -->
   <section class="presale">
     <h2>🔥 Presale is Live!</h2>
     <label for="tokenAmount">GCAM Tokens:</label>
@@ -30,5 +36,161 @@
     <button id="buyButton" class="btn" disabled>Buy GCAM</button>
     <div id="presaleStatus">💰 Price will be shown in USDT</div>
   </section>
+
+  <script>
+    let provider, signer, contract, usdt;
+
+    const contractAddress = "0xe5037f8A3B689c986f11d7c84B83be6E8a9199ff";
+    const contractABI = [
+      "function claimAirdrop() public",
+      "function hasClaimed(address) public view returns (bool)",
+      "function buyTokens(uint256 amount) public"
+    ];
+
+    const usdtAddress = "0x..."; // ضع عنوان عقد USDT الصحيح
+    const usdtABI = [
+      "function approve(address spender, uint256 amount) public returns (bool)",
+      "function allowance(address owner, address spender) public view returns (uint256)",
+      "function balanceOf(address owner) public view returns (uint256)"
+    ];
+
+    const requiredChainId = 97; // BSC Testnet
+
+    const providerOptions = {
+      walletconnect: {
+        package: window.WalletConnectProvider.default,
+        options: {
+          rpc: {
+            56: "https://bsc-dataseed.binance.org/",
+            97: "https://data-seed-prebsc-1-s1.binance.org:8545/"
+          }
+        }
+      }
+    };
+
+    const web3Modal = new window.Web3Modal.default({
+      cacheProvider: false,
+      providerOptions
+    });
+
+    document.getElementById("connectWallet").onclick = async () => {
+      try {
+        const instance = await web3Modal.connect();
+        provider = new ethers.providers.Web3Provider(instance);
+        signer = provider.getSigner();
+
+        const address = await signer.getAddress();
+        const network = await provider.getNetwork();
+
+        if (network.chainId !== requiredChainId) {
+          document.getElementById("walletStatus").innerText = `⚠️ Wrong network: ${network.name}`;
+          document.getElementById("status").innerText = "❌ Please switch to BSC Testnet.";
+          return;
+        }
+
+        contract = new ethers.Contract(contractAddress, contractABI, signer);
+        usdt = new ethers.Contract(usdtAddress, usdtABI, signer);
+
+        document.getElementById("walletStatus").innerText = `✅ Connected: ${address}`;
+        document.getElementById("status").innerText = "✅ Wallet connected";
+        document.getElementById("buyButton").disabled = false;
+      } catch (err) {
+        console.error(err);
+        document.getElementById("walletStatus").innerText = "❌ Connection failed.";
+      }
+    };
+
+    document.getElementById("switchNetwork").onclick = async () => {
+      try {
+        await window.ethereum.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: "0x61" }] // 0x61 = 97 BSC Testnet
+        });
+        document.getElementById("status").innerText = "✅ Switched to BSC Testnet.";
+      } catch (err) {
+        console.error(err);
+        document.getElementById("status").innerText = "❌ Failed to switch network.";
+      }
+    };
+
+    document.getElementById("verifyFollow").onclick = () => {
+      const twitterHandle = document.getElementById("twitterHandle").value.trim();
+      if (twitterHandle === "") {
+        document.getElementById("status").innerText = "⚠️ Please enter your X username.";
+        return;
+      }
+      document.getElementById("status").innerText = `✅ Verified follow for @${twitterHandle}`;
+      document.getElementById("claimButton").disabled = false;
+    };
+
+    document.getElementById("claimButton").onclick = async () => {
+      if (!contract) {
+        document.getElementById("status").innerText = "❌ Please connect your wallet first.";
+        return;
+      }
+
+      try {
+        const address = await signer.getAddress();
+        const alreadyClaimed = await contract.hasClaimed(address);
+
+        if (alreadyClaimed) {
+          document.getElementById("status").innerText = "⚠️ You have already claimed your airdrop.";
+          return;
+        }
+
+        document.getElementById("status").innerText = "⏳ Sending claim transaction...";
+        const tx = await contract.claimAirdrop();
+        await tx.wait();
+
+        document.getElementById("status").innerText = "🎁 Success! You received GCAM tokens.";
+      } catch (err) {
+        console.error(err);
+        document.getElementById("status").innerText = "❌ Transaction failed.";
+      }
+    };
+
+    document.getElementById("tokenAmount").oninput = () => {
+      const amount = parseInt(document.getElementById("tokenAmount").value);
+      if (!amount || amount <= 0) {
+        document.getElementById("presaleStatus").innerText = "⚠️ Enter a valid token amount.";
+        return;
+      }
+
+      const pricePerToken = 0.01;
+      const totalPrice = amount * pricePerToken;
+      document.getElementById("presaleStatus").innerText = `💵 Total Price: ${totalPrice.toFixed(2)} USDT`;
+    };
+
+    document.getElementById("buyButton").onclick = async () => {
+      if (!contract || !usdt) {
+        document.getElementById("presaleStatus").innerText = "❌ Please connect your wallet first.";
+        return;
+      }
+
+      try {
+        const amount = parseInt(document.getElementById("tokenAmount").value);
+        if (!amount || amount <= 0) {
+          document.getElementById("presaleStatus").innerText = "⚠️ Enter a valid token amount.";
+          return;
+        }
+
+        const pricePerToken = 0.01;
+        const totalPrice = ethers.utils.parseUnits((amount * pricePerToken).toString(), 18);
+
+        document.getElementById("presaleStatus").innerText = "⏳ Approving USDT...";
+        const approveTx = await usdt.approve(contractAddress, totalPrice);
+        await approveTx.wait();
+
+        document.getElementById("presaleStatus").innerText = "⏳ Sending presale transaction...";
+        const tx = await contract.buyTokens(amount);
+        await tx.wait();
+
+        document.getElementById("presaleStatus").innerText = "🎉 Success! You bought GCAM tokens.";
+      } catch (err) {
+        console.error(err);
+        document.getElementById("presaleStatus").innerText = "❌ Transaction failed.";
+      }
+    };
+  </script>
 </body>
 </html>
