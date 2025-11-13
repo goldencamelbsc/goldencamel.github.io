@@ -5,11 +5,11 @@ const contractAddress = "0xe5037f8A3B689c986f11d7c84B83be6E8a9199ff";
 const contractABI = [
   "function claimAirdrop() public",
   "function hasClaimed(address) public view returns (bool)",
-  "function buyTokens(uint256 amount) public", // دالة شراء التوكنات
+  "function buyTokens(uint256 amount) public"
 ];
 
-// عنوان عقد USDT (مثال على BSC Testnet)
-const usdtAddress = "0x..."; // ضع هنا عنوان عقد USDT الصحيح
+// عنوان عقد USDT (ضع هنا العنوان الصحيح على BSC Testnet)
+const usdtAddress = "0x..."; 
 const usdtABI = [
   "function approve(address spender, uint256 amount) public returns (bool)",
   "function allowance(address owner, address spender) public view returns (uint256)",
@@ -18,37 +18,56 @@ const usdtABI = [
 
 let provider, signer, contract, usdt;
 
+// عناصر الواجهة
 const connectButton = document.getElementById("connectButton");
 const claimButton = document.getElementById("claimButton");
 const status = document.getElementById("status");
-
 const verifyButton = document.getElementById("verifyFollow");
 const twitterHandle = document.getElementById("twitterHandle");
-
 const buyButton = document.getElementById("buyButton");
 const tokenAmountInput = document.getElementById("tokenAmount");
 const presaleStatus = document.getElementById("presaleStatus");
 
+// إعداد Web3Modal
+const providerOptions = {
+  walletconnect: {
+    package: window.WalletConnectProvider.default,
+    options: {
+      rpc: {
+        97: "https://data-seed-prebsc-1-s1.binance.org:8545/", // BSC Testnet
+        56: "https://bsc-dataseed.binance.org/" // BSC Mainnet
+      }
+    }
+  }
+};
+
+const web3Modal = new window.Web3Modal.default({
+  cacheProvider: false,
+  providerOptions
+});
+
 // زر الاتصال بالمحفظة
 connectButton.onclick = async () => {
-  if (!window.ethereum) {
-    status.innerText = "🦊 Please install MetaMask first.";
-    return;
-  }
-
   try {
-    await window.ethereum.request({ method: "eth_requestAccounts" });
-    provider = new ethers.providers.Web3Provider(window.ethereum);
+    const instance = await web3Modal.connect();
+    provider = new ethers.providers.Web3Provider(instance);
     signer = provider.getSigner();
 
     const userAddress = await signer.getAddress();
+    const network = await provider.getNetwork();
+
+    if (network.chainId !== 97) {
+      status.innerText = `⚠️ Wrong network: ${network.name}\nPlease switch to BSC Testnet.`;
+      return;
+    }
+
     contract = new ethers.Contract(contractAddress, contractABI, signer);
     usdt = new ethers.Contract(usdtAddress, usdtABI, signer);
 
     status.innerText = `✅ Connected: ${userAddress}`;
     buyButton.disabled = false;
   } catch (err) {
-    console.error(err);
+    console.error("Connection error:", err);
     status.innerText = "❌ Wallet connection failed.";
   }
 };
@@ -60,7 +79,7 @@ verifyButton.onclick = () => {
     return;
   }
   status.innerText = `✅ Verified follow for @${twitterHandle.value}`;
-  claimButton.disabled = false; // تفعيل زر Airdrop بعد التحقق
+  claimButton.disabled = false;
 };
 
 // زر المطالبة بالـ Airdrop
@@ -98,7 +117,7 @@ tokenAmountInput.oninput = () => {
     return;
   }
 
-  const pricePerToken = 0.01; // مثال: كل توكن = 0.01 USDT
+  const pricePerToken = 0.01; 
   const totalPrice = amount * pricePerToken;
   presaleStatus.innerText = `💵 Total Price: ${totalPrice.toFixed(2)} USDT`;
 };
@@ -121,14 +140,10 @@ buyButton.onclick = async () => {
     const totalPrice = ethers.utils.parseUnits((amount * pricePerToken).toString(), 18);
 
     presaleStatus.innerText = "⏳ Approving USDT...";
-
-    // الموافقة على العقد لسحب USDT
     const approveTx = await usdt.approve(contractAddress, totalPrice);
     await approveTx.wait();
 
     presaleStatus.innerText = "⏳ Sending presale transaction... please confirm in wallet.";
-
-    // استدعاء دالة شراء التوكنات
     const tx = await contract.buyTokens(amount);
     await tx.wait();
 
