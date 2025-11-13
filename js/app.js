@@ -20,6 +20,7 @@ let provider, signer, contract, usdt;
 
 // عناصر الواجهة
 const connectButton = document.getElementById("connectButton");
+const switchNetworkButton = document.getElementById("switchNetwork");
 const claimButton = document.getElementById("claimButton");
 const status = document.getElementById("status");
 const verifyButton = document.getElementById("verifyFollow");
@@ -69,6 +70,20 @@ connectButton.onclick = async () => {
   } catch (err) {
     console.error("Connection error:", err);
     status.innerText = "❌ Wallet connection failed.";
+  }
+};
+
+// زر تغيير الشبكة تلقائيًا في MetaMask
+switchNetworkButton.onclick = async () => {
+  try {
+    await window.ethereum.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: "0x61" }] // 0x61 = 97 BSC Testnet
+    });
+    status.innerText = "✅ Switched to BSC Testnet.";
+  } catch (err) {
+    console.error("Switch network error:", err);
+    status.innerText = "❌ Failed to switch network. Please do it manually.";
   }
 };
 
