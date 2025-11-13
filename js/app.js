@@ -21,6 +21,7 @@ let provider, signer, contract, usdt;
 // عناصر الواجهة
 const connectButton = document.getElementById("connectButton");
 const switchNetworkButton = document.getElementById("switchNetwork");
+const disconnectButton = document.getElementById("disconnectButton");
 const claimButton = document.getElementById("claimButton");
 const status = document.getElementById("status");
 const verifyButton = document.getElementById("verifyFollow");
@@ -67,6 +68,7 @@ connectButton.onclick = async () => {
 
     status.innerText = `✅ Connected: ${userAddress}`;
     buyButton.disabled = false;
+    claimButton.disabled = false;
   } catch (err) {
     console.error("Connection error:", err);
     status.innerText = "❌ Wallet connection failed.";
@@ -84,6 +86,23 @@ switchNetworkButton.onclick = async () => {
   } catch (err) {
     console.error("Switch network error:", err);
     status.innerText = "❌ Failed to switch network. Please do it manually.";
+  }
+};
+
+// زر قطع الاتصال بالمحفظة
+disconnectButton.onclick = async () => {
+  try {
+    await web3Modal.clearCachedProvider();
+    provider = null;
+    signer = null;
+    contract = null;
+    usdt = null;
+    status.innerText = "🔌 Wallet disconnected.";
+    buyButton.disabled = true;
+    claimButton.disabled = true;
+  } catch (err) {
+    console.error("Disconnect error:", err);
+    status.innerText = "❌ Failed to disconnect.";
   }
 };
 
@@ -156,15 +175,3 @@ buyButton.onclick = async () => {
 
     presaleStatus.innerText = "⏳ Approving USDT...";
     const approveTx = await usdt.approve(contractAddress, totalPrice);
-    await approveTx.wait();
-
-    presaleStatus.innerText = "⏳ Sending presale transaction... please confirm in wallet.";
-    const tx = await contract.buyTokens(amount);
-    await tx.wait();
-
-    presaleStatus.innerText = "🎉 Success! You bought GCAM tokens.";
-  } catch (err) {
-    console.error(err);
-    presaleStatus.innerText = "❌ Transaction failed.";
-  }
-};
