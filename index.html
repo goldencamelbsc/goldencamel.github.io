@@ -5,13 +5,17 @@
   <title>GCAM Token Presale</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
 
-  <!-- مكتبة ethers.js -->
+  <!-- CSS -->
+  <!-- إذا كان ملف style.css داخل مجلد css استخدم المسار أدناه -->
+  <link rel="stylesheet" href="css/style.css?v=1">
+
+  <!-- 1) مكتبة ethers يجب أن تُحمّل أولاً -->
   <script src="https://cdn.jsdelivr.net/npm/ethers/dist/ethers.min.js"></script>
 
-  <!-- مكتبة Web3Modal -->
+  <!-- 2) مكتبة Web3Modal -->
   <script src="https://unpkg.com/web3modal"></script>
 
-  <!-- مكتبة WalletConnect Provider -->
+  <!-- 3) مزود WalletConnect -->
   <script src="https://unpkg.com/@walletconnect/web3-provider"></script>
 
   <style>
@@ -30,11 +34,13 @@
       font-weight: bold;
       cursor: pointer;
       margin: 10px;
+      border: none;
     }
     input {
       padding: 10px;
       border-radius: 6px;
       margin: 10px;
+      border: none;
     }
     #status, #presaleStatus {
       margin-top: 20px;
@@ -44,7 +50,7 @@
   </style>
 </head>
 <body>
-  <h1>🐪 الجمل الذهبي — رمز GCAM</h1>
+  <h1>🐪 الجمل الذهبي — GCAM Token</h1>
 
   <!-- أزرار الاتصال -->
   <button id="connectButton" class="btn">🔗 ربط المحفظة</button>
@@ -66,7 +72,11 @@
     <div id="presaleStatus">💵 أدخل المبلغ لمعرفة السعر</div>
   </div>
 
-  <!-- سكربت التطبيق: defer لضمان جاهزية DOM -->
-  <script src="app.js" defer></script>
+  <!-- تحميل سكربت التطبيق -->
+  <!-- إذا كان app.js داخل مجلد js استخدم السطر التالي -->
+  <script src="js/app.js" defer></script>
+
+  <!-- إذا كان app.js بجانب index.html استخدم هذا السطر بدلاً من السابق -->
+  <!-- <script src="app.js" defer></script> -->
 </body>
 </html>
