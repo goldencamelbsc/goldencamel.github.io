@@ -50,7 +50,7 @@ const web3Modal = new window.Web3Modal.default({
 // زر الاتصال بالمحفظة
 connectButton.onclick = async () => {
   try {
-    const instance = await web3Modal.connect();
+    const instance = await web3Modal.connect();   // فتح نافذة Web3Modal
     provider = new ethers.providers.Web3Provider(instance);
     signer = provider.getSigner();
 
